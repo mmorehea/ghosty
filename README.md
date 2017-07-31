@@ -1,1 +1,1 @@
-"# ghosty" 
+# ghosty
