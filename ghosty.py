@@ -4,22 +4,44 @@ import os
 import code
 import tifffile
 
-MAX_IMG_RESOLUTION = 2000
+MAX_IMG_RESOLUTION = 2000.0
+
+
+#keep methods near top
+def getScaled( value ):
+	value = value * scaleRatio
+	return int(value)
+
+def makeMinZero(arr):
+	minVal = min(arr)
+	if minVal < 0:
+		arr = [int(i + abs(minVal)) for i in arr]
+	else:
+		arr = [int(i - minVal) for i in arr]
+	return arr
 
 
 with open('ROI2.csv') as f:
-    line=f.readline()
+	line=f.readline()
 
 
 header = line.strip().split(',')
 data = np.genfromtxt('ROI2.csv', delimiter=",", skip_header=1)
 
-xs = data[:, 15]
-ys = data[:, 16]
-zs = data[:, 17]
+xs = makeMinZero(data[:, 15])
+ys = makeMinZero(data[:, 16])
+zs = makeMinZero(data[:, 17])
+
+
+
+#zs has negative numbers in it. if any coordinate has negative numbers, it needs to be reset so the lowest number is 0. also make it all ints
+
+
 xdiff = max(xs) - min(xs)
 ydiff = max(ys) - min(ys)
 zdiff = max(zs) - min(zs)
+
+
 
 print "Actual dimensions: " + str(xdiff) + ", " + str(ydiff) + ", " + str(zdiff)
 
@@ -27,16 +49,14 @@ dim = [xdiff, ydiff, zdiff]
 
 maxDim = max(dim)
 
-scaleRatio = MAX_IMG_RESOLUTION / maxDim
+scaleRatio = MAX_IMG_RESOLUTION / float(maxDim)
 
 
-xScaled_Dim = xdiff * scaleRatio
-yScaled_Dim = ydiff * scaleRatio
-zScaled_Dim = zdiff * scaleRatio
+xScaled_Dim = getScaled(xdiff)
+yScaled_Dim = getScaled(ydiff)
+zScaled_Dim = getScaled(zdiff)
 
-def getScaled( value ):
-    value = value * scaleRatio
-    return value
+
 
 
 xScaled_Dim = int(xScaled_Dim)
@@ -49,15 +69,32 @@ print "Scaled dimensions: " + str(xScaled_Dim) + ", " + str(yScaled_Dim) + ", " 
 #For some reason it gave me an index error here so when I casted the values
 #as ints it worked great. Not sure if its okay to cast as int or not,
 #but it worked :)
-arr = np.zeros((xScaled_Dim,yScaled_Dim,zScaled_Dim))
+arr = np.zeros((xScaled_Dim + 1,yScaled_Dim + 1,zScaled_Dim + 1))
 
 #this scales all the coordinates of the data down to the desired amount
 #to load onto the RAM
-xs_Scaled = xs * scaleRatio
-ys_Scaled = ys * scaleRatio
-zs_Scaled = zs * scaleRatio
+#xs_Scaled = xs * scaleRatio
+#ys_Scaled = ys * scaleRatio
+#zs_Scaled = zs * scaleRatio
+
+#please use TABS, not spaces
+#GREAT GOOD START
+#this is how I'd do it:
+if len(xs) != len(ys) or len(ys) != len(zs):
+	print "length of x y and z not the same, bailing out"
+	sys.exit(0)
 
 
+for index in range(len(xs)):
+	if index % 1000 == 0:
+		print str(index) + " / " + str(len(xs))
+	try:
+		arr[getScaled(xs[index]), getScaled(ys[index]), getScaled(zs[index])] = 1
+	except:
+		print "array error"
+		print index		
+		print getScaled(xs[index]), getScaled(ys[index]), getScaled(zs[index])
+		code.interact(local=locals())
 #gave me an error for too many values to unpack
 # for px,py,pz in xs_Scaled,ys_Scaled,zs_Scaled:
 #     # px = int(px)
