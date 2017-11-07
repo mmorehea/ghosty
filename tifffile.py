@@ -267,10 +267,7 @@ try:
     else:
         import _tifffile
 except ImportError:
-    warnings.warn(
-        "failed to import the optional _tifffile C extension module.\n"
-        "Loading of some compressed images will be very slow.\n"
-        "Tifffile.c can be obtained at http://www.lfd.uci.edu/~gohlke/")
+    pass
 
 
 __version__ = '2016.04.18'
